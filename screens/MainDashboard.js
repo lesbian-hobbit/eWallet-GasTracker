@@ -6,7 +6,7 @@ import { db } from '../firebase';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import detectEthereumProvider from '@metamask/detect-provider';
+
 
 
 const MainDashboard = () => {
@@ -50,22 +50,7 @@ const MainDashboard = () => {
   const [amount, setAmount] = useState();
   const [fullname, setName] = useState();
 
-  useEffect(() => {
-    const detectProvider = async () => {
-      const provider = await detectEthereumProvider();
-      if (provider) {
-        setProvider(provider);
-        if (provider.selectedAddress) {
-          setAddress(provider.selectedAddress);
-          console.log(provider);
-        }
-      } else {
-        console.error('Metamask provider not found');
-      }
-    };
 
-    detectProvider();
-  }, []);
 
   useEffect(() => {
     onAuthStateChanged(auth, user => {
@@ -111,22 +96,7 @@ const MainDashboard = () => {
       });
   };
 
-  const connectToMetamask = async () => {
-    if (window.ethereum) {
-      try {
-        await window.ethereum.enable();
-        const web3 = new Web3(window.ethereum);
-        // Use the web3 instance for further interactions\
-        const accounts = await web3.eth.getAccounts();
-        setAddress(accounts[0]);
-        console.log(accounts[0]);
-      } catch (error) {
-console.error(error);
-      }
-    } else {
-     console.error('Ethereum object not found');
-    }
-  };
+ 
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -195,10 +165,6 @@ console.error(error);
         <TouchableOpacity style={styles.iconContainer} onPress={historyLogsButton}>
           <Ionicons name="md-time" size={21} color="#111827" />
           <Text style={styles.iconLabel}>History</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconContainer} onPress={connectToMetamask}>
-          <Ionicons name="md-time" size={21} color="#111827" />
-          <Text style={styles.iconLabel}>Connect to Metamask</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

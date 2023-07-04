@@ -14,11 +14,14 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { setDoc, doc } from "firebase/firestore";
+import * as LocalAuthentication from "expo-local-authentication";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailVerified, setEmailVerified] = useState(false); // Set initial value to false
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
 
   const onPress = () => {
     navigation.navigate("Registrationpage");
@@ -36,6 +39,47 @@ const Login = ({ navigation }) => {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    const checkBiometricAvailability = async () => {
+      const isHardwareAvailable = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      setBiometricAvailable(isHardwareAvailable && isEnrolled);
+    };
+  
+    checkBiometricAvailability();
+  }, []);
+
+  const handleBiometricAuth = async () => {
+    try {
+      const { success } = await LocalAuthentication.authenticateAsync();
+      if (success) {
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            const user = auth.currentUser;
+            if (user.emailVerified) {
+              navigation.navigate("Main", {
+                email: email,
+              });
+            } else {
+              alert("Email not verified. Please verify your email to login.");
+              console.log("Email not verified");
+            }
+          })
+          .catch((error) => {
+            const errorMessage = error.message;
+            alert(errorMessage);
+            console.log(errorMessage);
+          });
+        
+        console.log("Biometric authentication successful");
+      } else {
+        console.log("Biometric authentication failed");
+      }
+    } catch (error) {
+      console.log("Biometric authentication error:", error);
+    }
+  };
 
   const handleLogin = () => {
     if (email.trim() === "") {
@@ -116,70 +160,6 @@ const Login = ({ navigation }) => {
   secureTextEntry
 />
         
-        <View style={styles.keypadContainer}>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("1")}
-          >
-            <Text style={styles.keypadButtonText}>1</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("2")}
-          >
-            <Text style={styles.keypadButtonText}>2</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("3")}
-          >
-            <Text style={styles.keypadButtonText}>3</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("4")}
-          >
-            <Text style={styles.keypadButtonText}>4</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("5")}
-          >
-            <Text style={styles.keypadButtonText}>5</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("6")}
-          >
-            <Text style={styles.keypadButtonText}>6</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("7")}
-          >
-            <Text style={styles.keypadButtonText}>8</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("9")}
-          >
-            <Text style={styles.keypadButtonText}>9</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("0")}
-          >
-            <Text style={styles.keypadButtonText}>0</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.keypadButton}
-            onPress={() => handleKeypadPress("3")}
-          >
-            <Text style={styles.keypadButtonText}>3</Text>
-          </TouchableOpacity>
-          {/* Add more buttons as needed */}
-        </View>
-        
         <TouchableOpacity
           style={styles.button}
           onPress={handleLogin}
@@ -195,6 +175,13 @@ const Login = ({ navigation }) => {
             <Text style={styles.buttonTextSignUp}>Signup here!</Text>
           </View>
         </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.button}
+  onPress={handleBiometricAuth}
+  disabled={!biometricAvailable} // Disable the button if biometric authentication is not available
+>
+  <Text style={styles.buttonText}>Login with Biometrics</Text>
+</TouchableOpacity>
       </ImageBackground>
     </View>
   );

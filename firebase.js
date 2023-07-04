@@ -2,7 +2,6 @@
 import firebase from 'firebase/compat/app'
 import 'firebase/compat/auth'
 import 'firebase/compat/firestore'
-import { getMessaging } from "firebase/messaging";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -22,8 +21,8 @@ const firebaseConfig = {
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig)
 }
-const messaging = getMessaging();
+
 const auth = firebase.auth()
 const db = firebase.firestore();
 
-export { auth, firebase, db, messaging};
+export { auth, firebase, db};
