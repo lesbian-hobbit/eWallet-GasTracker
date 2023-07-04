@@ -1,27 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ImageBackground,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ImageBackground } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "../firebase";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { setDoc, doc } from "firebase/firestore";
 import * as LocalAuthentication from "expo-local-authentication";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false); // Set initial value to false
+  const [emailVerified, setEmailVerified] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-
 
   const onPress = () => {
     navigation.navigate("Registrationpage");
@@ -30,7 +19,7 @@ const Login = ({ navigation }) => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        setEmail(user.email); // Fetch the user's email
+        setEmail(user.email);
         setEmailVerified(user.emailVerified);
         navigation.replace("Main");
         console.log("email verified: ", user.emailVerified);
@@ -50,28 +39,50 @@ const Login = ({ navigation }) => {
     checkBiometricAvailability();
   }, []);
 
+  // useEffect(() => {
+  //   const retrieveSavedCredentials = async () => {
+  //     try {
+  //       const savedEmail = await AsyncStorage.getItem("email");
+  //       const savedPassword = await AsyncStorage.getItem("password");
+  //       if (savedEmail && savedPassword) {
+  //         setEmail(savedEmail);
+  //         setPassword(savedPassword);
+
+  //         console.log(savedEmail, savedPassword);
+  //       }
+  //     } catch (error) {
+  //       console.log("Error retrieving saved credentials:", error);
+  //     }
+  //   };
+
+  //   retrieveSavedCredentials();
+  // }, []);
+
   const handleBiometricAuth = async () => {
     try {
       const { success } = await LocalAuthentication.authenticateAsync();
       if (success) {
-        signInWithEmailAndPassword(auth, email, password)
-          .then(() => {
-            const user = auth.currentUser;
-            if (user.emailVerified) {
-              navigation.navigate("Main", {
-                email: email,
-              });
-            } else {
-              alert("Email not verified. Please verify your email to login.");
-              console.log("Email not verified");
-            }
-          })
-          .catch((error) => {
-            const errorMessage = error.message;
-            alert(errorMessage);
-            console.log(errorMessage);
-          });
-        
+        const storedEmail = await AsyncStorage.getItem("email");
+        const storedPassword = await AsyncStorage.getItem("password");
+        if (storedEmail && storedPassword) {
+          signInWithEmailAndPassword(auth, storedEmail, storedPassword)
+            .then(() => {
+              const user = auth.currentUser;
+              if (user.emailVerified) {
+                navigation.navigate("Main", { email: storedEmail });
+              } else {
+                alert("Email not verified. Please verify your email to login.");
+                console.log("Email not verified");
+              }
+            })
+            .catch((error) => {
+              const errorMessage = error.message;
+              alert(errorMessage);
+              console.log(errorMessage);
+            });
+        } else {
+          console.log("Stored email or password is missing.");
+        }
         console.log("Biometric authentication successful");
       } else {
         console.log("Biometric authentication failed");
@@ -95,9 +106,9 @@ const Login = ({ navigation }) => {
       .then(() => {
         const user = auth.currentUser;
         if (user.emailVerified) {
-          navigation.navigate("Main", {
-            email: email,
-          });
+          AsyncStorage.setItem("email", email);
+          AsyncStorage.setItem("password", password);
+          navigation.navigate("Main", { email });
         } else {
           alert("Email not verified. Please verify your email to login.");
           console.log("Email not verified");
@@ -119,6 +130,8 @@ const Login = ({ navigation }) => {
     const updatedPassword = password + value;
     setPassword(updatedPassword);
   };
+
+ 
 
   return (
     <View style={{ flex: 1, justifyContent: "center" }}>
