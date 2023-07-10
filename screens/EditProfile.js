@@ -1,12 +1,12 @@
 import React, { useState, 
-                useEffect } from 'react';
+                useEffect, useContext } from 'react';
 import { View, 
          Text, 
          StyleSheet, 
          TextInput, 
          ImageBackground,
          SafeAreaView,
-         TouchableOpacity } from 'react-native';
+         TouchableOpacity, Switch } from 'react-native';
 import { auth, 
          firebase } from '../firebase';
 import { doc, 
@@ -14,9 +14,13 @@ import { doc,
 import { db } from '../firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import QRCode from 'react-native-qrcode-svg';
+import { useNavigation } from '@react-navigation/native';
+import { AppContext } from '../AppContext';
 
 const EditProfile = () => {
-
+  const { showFingerprint, setShowFingerprint } = useContext(AppContext);
+  const navigation = useNavigation();
+  
   const [userInfo, setUserInfo] = useState([]);
   const [email, setEmail] = useState();
   const [uids, setUid] = useState();
@@ -24,6 +28,9 @@ const EditProfile = () => {
   const [contact, setContact] = useState("");
   const [qrCodeValue, setQrCodeValue] = useState('');
 
+  const onPress = () => {
+    navigation.navigate("Registrationpage", { showFingerprint: true }); // Replace `true` with the value you want to pass
+  };
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -68,7 +75,11 @@ const EditProfile = () => {
         console.error('Error updating profile:', error);
       }
     }
+    
   }
+  const handleToggleFingerprint = () => {
+    setShowFingerprint(!showFingerprint);
+  };
   return (
     <SafeAreaView style={{
       flex: 1,
@@ -120,6 +131,15 @@ const EditProfile = () => {
               value={fullname}
               onChangeText={text => setName(text.replace(/[^a-zA-Z ]/g, ''))}
             />
+   <View style={styles.fingerprintToggleContainer}>
+          <Text style={styles.fingerprintToggleLabel}>Show Fingerprint</Text>
+          <Switch
+            value={showFingerprint}
+            onValueChange={handleToggleFingerprint}
+            
+          />
+          {showFingerprint ? <Text>Placerholder Screen 1</Text> : <Text>Placerholder Screen 2</Text>}
+        </View>
             <TextInput
               style={styles.input}
               placeholder="09xxxxxxxxx"
@@ -133,6 +153,7 @@ const EditProfile = () => {
           style={styles.button}
           onPress={editProfile}
           >
+            
             <Text style={styles.buttonText}>Save</Text>
           </TouchableOpacity>
           </View>

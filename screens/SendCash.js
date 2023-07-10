@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ImageBackground, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ImageBackground, FlatList } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, onSnapshot, writeBatch, runTransaction, doc, getDocs, setDoc, addDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, writeBatch, runTransaction, doc, getDocs, setDoc, addDoc, Timestamp, orderBy, limit } from "firebase/firestore";
 import { auth, db, firebase } from "../firebase";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import * as SMS from "expo-sms";
-import axios from 'axios';
+
 import { encode } from 'base-64';
 
 
@@ -14,59 +13,19 @@ const SendCash = ({ route, navigation }) => {
   const [balance, setBalance] = useState(5000); // Initial balance
   const [email, setEmail] = useState();
   const [userInfo, setUserInfo] = useState([]);
-  const [transactions, setTransactions] = useState();
   const [fullname, setName] = useState();
   const [recipientEmail, setRecipientEmail] = useState();
   const [amount, setAmount] = useState();
   const [recentContacts, setRecentContacts] = useState([]);
   const [ConfirmPassword, setPassword] = useState("");
-  const [password, setPin] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOTP] = useState('');
-  const phoneNumber2 = "+639166655582";
-  const phoneNumber4 = "+639166655582"; // Replace with the recipient's phone number
-
-
+  const scannedData = route.params?.scannedData
   if (!global.btoa) {
     global.btoa = encode;
   }
 
   const twilioAccountSid = "ACad63823e8efaa1803b3473082f3945b0";
   const twilioAuthToken = "c6d17c5de96fdcb54f32e031fd0f3703";
-
-
-
-  const saveDataToStorage = async (recipientEmail, recentContacts) => {
-    try {
-      const data = JSON.stringify({ recipientEmail, recentContacts });
-      await AsyncStorage.setItem('userData', data);
-      console.log('Data saved to AsyncStorage');
-    } catch (error) {
-      console.log('Error saving data to AsyncStorage:', error);
-    }
-  };
-
-  const loadDataFromStorage = async () => {
-    try {
-      const data = await AsyncStorage.getItem('userData');
-      if (data) {
-        const { recipientEmail, recentContacts } = JSON.parse(data);
-        setRecipientEmail(recipientEmail);
-        setRecentContacts(recentContacts);
-        console.log('Data loaded from AsyncStorage');
-      }
-    } catch (error) {
-      console.log('Error loading data from AsyncStorage:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadDataFromStorage();
-  }, []);
-
-  useEffect(() => {
-    saveDataToStorage(recipientEmail, recentContacts);
-  }, [recipientEmail, recentContacts]);
 
   const getRecipientUid = async (email) => {
     const usersRef = collection(db, 'users');
@@ -89,86 +48,55 @@ const SendCash = ({ route, navigation }) => {
           const user = auth.currentUser;
           if (user.emailVerified) {
             console.log(res);
-            transferFunds();
+
             const userData = userCredential.user;
             console.log("User password:", userData.password, uid, userData.email);
           } else {
             alert("Password does not match");
           }
         });
-
-
-
-
-
-
-
-
-
       }
     });
+    if (ConfirmPin) {
+      transferFunds();
+    }
   };
 
 
-
-  // const generateOTP = () => {
-  //   const otpLength = 6;
-  //   const digits = "0123456789";
-  //   let otp = "";
-
-  //   for (let i = 0; i < otpLength; i++) {
-  //     otp += digits[Math.floor(Math.random() * digits.length)];
-  //   }
-
-  //   return otp;
-  // };
-
-  // const sendOTP = async () => {
-  //   const generatedOTP = generateOTP();
-
-  //   try {
-  //     const response = await axios.post(
-  //       `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
-  //       {
-  //         To: "+639166655582",
-  //         From: "+19123729424",
-  //         Body: `Your OTP is: ${generatedOTP}`,
-  //       },
-  //       {
-  //         auth: {
-  //           username: twilioAccountSid,
-  //           password: twilioAuthToken,
-  //         },
-  //       }
-  //     );
-
-  //     console.log("OTP sent:", response.data);
-  //     // Store the generatedOTP and phoneNumber for verification
-  //     // in the next step
-  //   } catch (error) {
-  //     console.error("Error sending OTP:", error.response.data);
-  //   }
-  // };
-
-  // sendOTP(phoneNumber);
-
-  // const handleVerifyOTP = () => {
-  //   // Add your OTP verification logic here
-  //   if (otp === '') {
-  //     Alert.alert('Error', 'Please generate and enter the OTP first.');
-  //   } else if (otp === enteredOTP) {
-  //     Alert.alert('Success', 'OTP verification successful!');
-  //   } else {
-  //     Alert.alert('Error', 'Invalid OTP.');
-  //   }
-  // };
+  const loadRecentTransactions = async () => {
+    const currentUserUID = auth.currentUser.uid;
+    const recentTransactionsRef = collection(
+      db,
+      'users',
+      currentUserUID,
+      'history',
+      'DUgVrFDJhas4wAuX07re',
+      'Sent'
+    );
+  
+    onSnapshot(
+      query(recentTransactionsRef, orderBy('Timestamp', 'desc'), limit(5)),
+      (snapshot) => {
+        const emailSet = new Set(); // Use a Set to store unique emails
+        snapshot.forEach((doc) => {
+          const { ReceiverEmail } = doc.data();
+          emailSet.add(ReceiverEmail); // Add email to the Set
+        });
+        const recentContacts = Array.from(emailSet); // Convert Set back to an array
+        setRecentContacts(recentContacts);
+      },
+      (error) => {
+        console.error('Error fetching recent transactions:', error);
+      }
+    );
+  };
 
 
   const transferFunds = async () => {
+    const user = auth.currentUser;
+  if (user && user.emailVerified) {
     try {
       const recipientUid = await getRecipientUid(recipientEmail);
-
-
       const sfDocRef = doc(db, 'users', recipientUid);
 
       await runTransaction(db, async (transaction) => {
@@ -207,6 +135,8 @@ const SendCash = ({ route, navigation }) => {
       };
       await deduct();
 
+
+
       const user = auth.currentUser.uid;
       if (user) {
         const uid = user;
@@ -221,7 +151,7 @@ const SendCash = ({ route, navigation }) => {
         };
         await newTransactions();
 
-        const recievedHis = async () => {
+        const receivedHis = async () => {
           await addDoc(collection(db, 'users', recipientUid, 'history', 'DUgVrFDJhas4wAuX07re', 'Recieved'), {
             transactions: amount,
             Timestamp: new Date(),
@@ -229,15 +159,19 @@ const SendCash = ({ route, navigation }) => {
             SenderEmail: SenderEmail,
           });
         };
-        await recievedHis();
+        await receivedHis();
 
+           // Check if the recipient's email is already in the recent contacts list
+      const isRecipientInContacts = recentContacts.includes(recipientEmail);
+      if (!isRecipientInContacts) {
         const updatedContacts = [recipientEmail, ...recentContacts.slice(0, 4)];
         setRecentContacts(updatedContacts);
-        saveDataToStorage(recipientEmail, updatedContacts);
+      }
       }
     } catch (error) {
       console.error('Error transferring funds:', error);
     }
+  }
   };
 
   useEffect(() => {
@@ -263,7 +197,7 @@ const SendCash = ({ route, navigation }) => {
 
         const unsubscribe = getWallet();
 
-        return () => {
+        return () =>{
           unsubscribe();
         };
       } else {
@@ -272,9 +206,15 @@ const SendCash = ({ route, navigation }) => {
     });
   }, []);
 
+  useEffect(() => {
+    loadRecentTransactions();
+    setRecipientEmail(scannedData);
+  }, []);
+
   const handleTransferFunds = () => {
     setBalance(balance - 100);
   };
+  
 
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -284,19 +224,25 @@ const SendCash = ({ route, navigation }) => {
           <View style={styles.currentBalanceContainer}>
             <Text style={styles.amountText}>₱ {userInfo.wallet}</Text>
           </View>
-          <View style={styles.recentContactsContainer}>
+ 
+        </View>
+        <View style={styles.recentContactsContainer}>
             <Text style={styles.recentContactsText}>Recent Contacts:</Text>
+            
             <View style={styles.recentContactsRow}></View>
-            {recentContacts.map((contact, index) => (
-              <TouchableOpacity key={index} onPress={() => setRecipientEmail(contact)}>
+  <FlatList
+            data={recentContacts}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => setRecipientEmail(item)}>
                 <View style={styles.contactIconContainer}>
                   <Ionicons name="person-circle-outline" size={24} color="white" />
-                  <Text style={styles.recentContactText}>{contact}</Text>
+                  <Text style={styles.recentContactText}>{item}</Text>
                 </View>
               </TouchableOpacity>
-            ))}
+            )}
+          />
           </View>
-        </View>
         <View style={{ padding: 20 }}>
           <TextInput
             style={styles.input}

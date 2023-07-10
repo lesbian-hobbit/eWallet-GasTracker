@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, Button  } from 'react-native'
+import React, { useState, useEffect} from 'react'
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import { useNavigation } from '@react-navigation/native';
 
-export default function ScanQR() {
+const ScanQr = () => {
+ 
+  const navigation = useNavigation()
+
+  // State variables
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [text, setText] = useState('Not yet scanned')
 
+  // Disply permission to use camera
   const askForCameraPermission = () => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -19,11 +25,14 @@ export default function ScanQR() {
     askForCameraPermission();
   }, []);
 
-  // What happens when we scan the bar code
+  //When we scan the bar code
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
     setText(data)
     console.log('Type: ' + type + '\nData: ' + data)
+    // Pass the scanned data to next screen
+    navigation.navigate("Send", { scannedData: data }); 
+    
   };
 
   // Check permissions and return the screens
@@ -41,7 +50,7 @@ export default function ScanQR() {
       </View>)
   }
 
-  // Return the View
+
   return (
     <View style={styles.container}>
       <View style={styles.barcodebox}>
@@ -55,25 +64,28 @@ export default function ScanQR() {
     </View>
   );
 }
+ 
+
+export default ScanQr
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  maintext: {
-    fontSize: 16,
-    margin: 20,
-  },
-  barcodebox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 300,
-    width: 300,
-    overflow: 'hidden',
-    borderRadius: 30,
-    backgroundColor: 'tomato'
-  }
-});
+    container: {
+      flex: 1,
+      backgroundColor: '#fff',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    maintext: {
+      fontSize: 16,
+      margin: 20,
+    },
+    barcodebox: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 300,
+      width: 300,
+      overflow: 'hidden',
+      borderRadius: 30,
+      backgroundColor: 'tomato'
+    }
+  });
