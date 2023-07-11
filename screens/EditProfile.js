@@ -27,7 +27,7 @@ const EditProfile = () => {
   const [fullname, setName] = useState();
   const [contact, setContact] = useState("");
   const [qrCodeValue, setQrCodeValue] = useState('');
-
+ 
   const onPress = () => {
     navigation.navigate("Registrationpage", { showFingerprint: true }); // Replace `true` with the value you want to pass
   };
@@ -138,7 +138,16 @@ const EditProfile = () => {
             onValueChange={handleToggleFingerprint}
             
           />
-          {showFingerprint ? <Text>Placerholder Screen 1</Text> : <Text>Placerholder Screen 2</Text>}
+            {showFingerprint && (
+              <View style={styles.fingerprintToggleContainer}>
+                <Text style={styles.fingerprintToggleLabel}>Show Fingerprint</Text>
+                <Switch
+                  value={showFingerprint}
+                  onValueChange={handleToggleFingerprint}
+                />
+                {/* Placeholder screen 1 or 2 */}
+              </View>
+            )}
         </View>
             <TextInput
               style={styles.input}

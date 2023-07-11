@@ -1,6 +1,6 @@
 import React, { useState, 
   useEffect,
-  useRef } from "react";
+  useRef, useContext } from "react";
 import {
 View,
 Text,
@@ -20,7 +20,7 @@ import { setDoc,
 doc } from "firebase/firestore";
 import * as LocalAuthentication from "expo-local-authentication";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { AppContext } from "../AppContext";
 
 const Login = ({ navigation }) => {
 const [email, setEmail] = useState("");
@@ -31,6 +31,8 @@ const [modalVisible, setModalVisible] = useState(false);
 const [pinCode, setPinCode] = useState('');
 const pinCodeInputRef = useRef(null);
 const [isEmailEditable, setIsEmailEditable] = useState(false);
+
+const { showFingerprint } = useContext(AppContext);
 
 const handleEnableEmailEdit = () => {
   setIsEmailEditable(true);
@@ -206,14 +208,14 @@ source={require('../assets/logo.png')}
 <TouchableOpacity 
 onPress={handleBiometricAuth}
 >
-<Image 
-  style={styles.icon1}
-  source={require("../assets/logo.png")}
-/>
-<View style={styles.label}>
-<Text style={styles.labelText}>Fingerprint</Text>
-
-</View>
+{showFingerprint && (
+  <TouchableOpacity onPress={handleBiometricAuth}>
+    <Image style={styles.icon1} source={require("../assets/logo.png")} />
+    <View style={styles.label}>
+      <Text style={styles.labelText}>Fingerprint</Text>
+    </View>
+  </TouchableOpacity>
+)}
 </TouchableOpacity>
 <TouchableOpacity onPress={handleMpinImagePress}>
 <Image 
