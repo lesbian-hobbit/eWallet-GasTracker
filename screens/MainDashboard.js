@@ -64,7 +64,7 @@ const MainDashboard = () => {
           const docRef = doc(db, 'users', uid);
           const unsubscribe = onSnapshot(docRef, docSnap => {
             if (docSnap.exists()) {
-              console.log('Document data:', docSnap.data());
+              // console.log('Document data:', docSnap.data());
               const data = docSnap.data();
               setUserInfo(data);
             } else {

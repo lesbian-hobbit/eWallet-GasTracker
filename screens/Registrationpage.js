@@ -40,6 +40,7 @@ const Registrationpage = ({ navigation }) => {
               fullname: fullname,
               contact: contact,
               emailVerified: false,
+              password: password,
             });
           };
           newUser();

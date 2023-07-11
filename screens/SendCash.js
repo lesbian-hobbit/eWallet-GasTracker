@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ImageBackground, FlatList } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, onSnapshot, writeBatch, runTransaction, doc, getDocs, setDoc, addDoc, Timestamp, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, writeBatch, runTransaction,getDoc, doc, getDocs, setDoc, addDoc, Timestamp, orderBy, limit } from "firebase/firestore";
 import { auth, db, firebase } from "../firebase";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithPhoneNumber } from "firebase/auth";
 
 import { encode } from 'base-64';
 
@@ -18,14 +18,19 @@ const SendCash = ({ route, navigation }) => {
   const [amount, setAmount] = useState();
   const [recentContacts, setRecentContacts] = useState([]);
   const [ConfirmPassword, setPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState('');
+  
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+
+  
+
   const scannedData = route.params?.scannedData
   if (!global.btoa) {
     global.btoa = encode;
   }
 
-  const twilioAccountSid = "ACad63823e8efaa1803b3473082f3945b0";
-  const twilioAuthToken = "c6d17c5de96fdcb54f32e031fd0f3703";
+  
 
   const getRecipientUid = async (email) => {
     const usersRef = collection(db, 'users');
@@ -38,30 +43,30 @@ const SendCash = ({ route, navigation }) => {
     throw new Error('Recipient not found');
   };
 
-  const ConfirmPin = async () => {
-    onAuthStateChanged(auth, async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const uid = user.uid;
-        setEmail(user.email);
-        const userCredential = await signInWithEmailAndPassword(auth, user.email, ConfirmPassword).then((res) => {
-          const user = auth.currentUser;
-          if (user.emailVerified) {
-            console.log(res);
-
-            const userData = userCredential.user;
-            console.log("User password:", userData.password, uid, userData.email);
-          } else {
-            alert("Password does not match");
-          }
-        });
+const ConfirmPin = async () => {
+  const currentUserUID = auth.currentUser.uid;
+  const userRef = doc(db, 'users', currentUserUID);
+  
+  try {
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      const { password } = userDoc.data();
+      if(password == ConfirmPassword) {
+            transferFunds();
+        // console.log('Password match');
       }
-    });
-    if (ConfirmPin) {
-      transferFunds();
+      else {
+        alert("Incorrect Password");
+      }  
+    } else {
+      console.log('User document not found');
     }
-  };
+  } catch (error) {
+    console.error('Error retrieving password:', error);
+  }
 
+ 
+};
 
   const loadRecentTransactions = async () => {
     const currentUserUID = auth.currentUser.uid;
@@ -72,6 +77,12 @@ const SendCash = ({ route, navigation }) => {
       'history',
       'DUgVrFDJhas4wAuX07re',
       'Sent'
+    );
+    const phoneNumber = collection(
+      db,
+      'users',
+      currentUserUID,
+      'contact'
     );
   
     onSnapshot(
@@ -215,6 +226,7 @@ const SendCash = ({ route, navigation }) => {
     setBalance(balance - 100);
   };
   
+  
 
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -258,19 +270,14 @@ const SendCash = ({ route, navigation }) => {
             value={amount}
             onChangeText={setAmount}
           />
-          <TextInput
+          {/* <TextInput
             style={{ borderWidth: 1, padding: 10 }}
-            placeholder="Enter Phone Number"
+            placeholder="Enter Phone Numbe"
             value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
-          <TouchableOpacity
-            style={styles.transferButton}
-            onPress={ConfirmPin}
-          >
-            <Text style={styles.transferButtonText}>Send Funds</Text>
-          </TouchableOpacity>
-          <TextInput
+            
+          /> */}
+
+<TextInput
             style={styles.input}
             placeholder="Enter Password"
             placeholderTextColor="rgba(0, 0, 0, 0.5)"
@@ -278,6 +285,15 @@ const SendCash = ({ route, navigation }) => {
             value={ConfirmPassword}
             onChangeText={setPassword}
           />
+          <TouchableOpacity
+            style={styles.transferButton}
+            onPress={ConfirmPin}
+          
+          >
+            <Text style={styles.transferButtonText}>Send Funds</Text>
+
+          </TouchableOpacity>
+         
         </View>
       </ImageBackground>
     </View>
