@@ -18,6 +18,7 @@ const SendCash = ({ route, navigation }) => {
   const [amount, setAmount] = useState();
   const [recentContacts, setRecentContacts] = useState([]);
   const [ConfirmPassword, setPassword] = useState("");
+  const [note, setNote] = useState(''); // State for note value
   const [verificationCode, setVerificationCode] = useState('');
   
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -107,6 +108,7 @@ const ConfirmPin = async () => {
     const user = auth.currentUser;
   if (user && user.emailVerified) {
     try {
+      
       const recipientUid = await getRecipientUid(recipientEmail);
       const sfDocRef = doc(db, 'users', recipientUid);
 
@@ -161,6 +163,33 @@ const ConfirmPin = async () => {
           });
         };
         await newTransactions();
+
+
+
+        
+        const sentHisNote = async () => {
+          const sentRef = collection(db, 'users', uid, "notes", "messages", "sentMessages"); // Reference to the "Notes" collection
+          await addDoc(sentRef, {
+            transactions: amount,
+            Timestamp: new Date(),
+            ReceiverUid: recipientUid,
+            ReceiverEmail: recipientEmail,
+            Note: note, // Add the note value to the document
+          });
+        };
+        await sentHisNote();
+
+        const receivedHisNote = async () => {
+          const receivedRef = collection(db, 'users', recipientUid, "notes", "messages", "receivedMessages"); // Reference to the "Notes" collection
+          await addDoc(receivedRef, {
+            transactions: amount,
+            Timestamp: new Date(),
+            Sender: uid,
+            SenderEmail: SenderEmail,
+            Note: note, // Add the note value to the document
+          });
+        };
+        await receivedHisNote();
 
         const receivedHis = async () => {
           await addDoc(collection(db, 'users', recipientUid, 'history', 'DUgVrFDJhas4wAuX07re', 'Recieved'), {
@@ -276,6 +305,13 @@ const ConfirmPin = async () => {
             value={phoneNumber}
             
           /> */}
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Note"
+            placeholderTextColor="rgba(0, 0, 0, 0.5)"
+            value={note}
+            onChangeText={setNote}
+          />
 
 <TextInput
             style={styles.input}

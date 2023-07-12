@@ -39,10 +39,13 @@ const MainDashboard = () => {
   const currencyButton = () => {
     navigation.navigate('Currency');
   };
-
+  const Notificationbut = () => {
+    navigation.navigate('Notifications');
+  };
   const historyLogsButton = () => {
     navigation.navigate('Logs');
   };
+ 
 
   const [email, setEmail] = useState();
   const [uids, setUid] = useState();
@@ -165,6 +168,11 @@ const MainDashboard = () => {
         <TouchableOpacity style={styles.iconContainer} onPress={historyLogsButton}>
           <Ionicons name="md-time" size={21} color="#111827" />
           <Text style={styles.iconLabel}>History</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.iconContainer} onPress={Notificationbut}>
+          <Ionicons name="md-time" size={21} color="#111827" />
+          <Text style={styles.iconLabel}>Notification</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

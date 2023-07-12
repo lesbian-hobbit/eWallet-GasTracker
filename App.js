@@ -10,6 +10,7 @@
   import Registrationpage from './screens/Registrationpage';
   import Logs from './screens/Logs';
   import ReceiveLogs from './screens/ReceiveLogs';
+  import Notifications from './screens/Notifications';
   import { AppProvider } from './AppContext';
 
   const Stack = createNativeStackNavigator();
@@ -29,6 +30,7 @@
           <Stack.Screen name="Registrationpage" component={Registrationpage}/>
           <Stack.Screen name="Logs" component={Logs}/>
           <Stack.Screen name="ReceiveLogs" component={ReceiveLogs}/>
+          <Stack.Screen name="Notifications" component={Notifications}/>
         </Stack.Navigator>
         
        
