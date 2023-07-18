@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Button  } from 'react-native'
 import React, { useState, useEffect} from 'react'
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { useNavigation } from '@react-navigation/native';
+import { FontFamily, FontSize, Color, Border, Padding } from "../GlobalStyles";
 
 const ScanQr = () => {
  
@@ -59,7 +60,6 @@ const ScanQr = () => {
           style={{ height: 400, width: 400 }} />
       </View>
       <Text style={styles.maintext}>{text}</Text>
-
       {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
     </View>
   );
@@ -71,13 +71,15 @@ export default ScanQr
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fff',
+      backgroundColor: Color.blackModePrimaryDark,
       alignItems: 'center',
       justifyContent: 'center',
     },
     maintext: {
       fontSize: 16,
       margin: 20,
+      color: '#fff',
+      fontFamily: FontFamily.poppinsBold
     },
     barcodebox: {
       alignItems: 'center',

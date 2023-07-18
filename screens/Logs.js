@@ -1,8 +1,9 @@
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ImageBackground, Modal } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ImageBackground, Modal, StatusBar } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
 import { auth, firebase } from '../firebase';
-import { onSnapshot, orderBy } from 'firebase/firestore';
+import { onSnapshot} from 'firebase/firestore';
+import {Color, FontFamily} from '../GlobalStyles'
 
 const Logs = () => {
   const [logInfo, setLogs] = useState([]);
@@ -12,6 +13,11 @@ const Logs = () => {
 
   const onPress = () => {
     navigation.navigate('ReceiveLogs');
+    
+  };
+  const onPress2 = () => {
+    navigation.navigate('Logs');
+    
   };
 
   const openModal = (transaction) => {
@@ -61,7 +67,16 @@ const Logs = () => {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../assets/background1.jpg')} resizeMode="cover" style={styles.image}>
+      <StatusBar backgroundColor="#141414" />
+      <Text style={styles.title}>Sent History</Text>
+      {/* <View style={styles.receivedButton}>
+          <TouchableOpacity style={styles.ButtonContainer} onPress={onPress}>
+            <Text style={styles.buttonText}>Received</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.ButtonContainer} onPress={onPress2}>
+            <Text style={styles.buttonText}>Sent</Text>
+          </TouchableOpacity>
+        </View> */}
         <FlatList
           showsVerticalScrollIndicator={false}
           style={styles.flatlistContainer}
@@ -71,18 +86,15 @@ const Logs = () => {
               style={[styles.logItem, index === 0 && styles.highlightedLog]}
               onPress={() => openModal(item)}
             >
-              <Text>You have just sent ₱{item.transactions} to {item.ReceiverEmail}</Text>
+              <Text style= {styles.pesoText}> Sent to {item.ReceiverEmail} </Text>
+              <Text style = {styles.ReceiverEmail}> -₱ {item.transactions} </Text>
               <Text style={styles.timestampText}>{item.Timestamp}</Text>
             </TouchableOpacity>
           )}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
         />
-        <View style={styles.receivedButton}>
-          <TouchableOpacity style={styles.ButtonContainer} onPress={onPress}>
-            <Text style={styles.buttonText}>Received History</Text>
-          </TouchableOpacity>
-        </View>
+      
         <Modal
           visible={modalVisible}
           animationType="slide"
@@ -93,9 +105,9 @@ const Logs = () => {
             {selectedTransaction && (
               <View style={styles.transactionModal}>
                 <Text style={styles.modalText}>Transaction Details</Text>
-                <Text>Transaction: ₱{selectedTransaction.transactions}</Text>
-                <Text>Receiver: {selectedTransaction.ReceiverEmail}</Text>
-                <Text>Timestamp: {selectedTransaction.Timestamp}</Text>
+                <Text style= {styles.modTrans}>You sent: ₱{selectedTransaction.transactions}</Text>
+                <Text style= {styles.modTrans}>Receiver: {selectedTransaction.ReceiverEmail}</Text>
+                <Text style= {styles.modTrans}>Time: {selectedTransaction.Timestamp}</Text>
                                 <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
@@ -103,7 +115,7 @@ const Logs = () => {
             )}
           </View>
         </Modal>
-      </ImageBackground>
+      
     </View>
   );
 };
@@ -112,7 +124,10 @@ export default Logs;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    backgroundColor: Color.blackModePrimaryDark,
     justifyContent: "center",
     position: 'absolute',
     top: 0,
@@ -121,21 +136,24 @@ const styles = StyleSheet.create({
     right: 0
   },
   ButtonContainer: {
-    marginHorizontal: 80,
-    backgroundColor: "#111827",
+    justifyContent: 'space-between',
+    backgroundColor: "#7B61FF",
     paddingVertical: 10,
+    paddingHorizontal:20,
     borderRadius: 5,
     marginTop: 15,
+    
   },
   buttonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
     textAlign: "center",
+    fontFamily: FontFamily.poppinsMedium,
   },
   receivedButton: {
     padding: 10,
-    marginBottom: 10
+    flexDirection: "row",
+    justifyContent: "center",
   },
   loadingContainer: {
     flex: 1,
@@ -149,21 +167,19 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   logItem: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     padding: 16,
     marginBottom: 8,
     borderRadius: 8,
     elevation: 2,
+    
   },
   highlightedLog: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#7B61FF',
     borderWidth: 2,
     borderColor: '#FFA500',
   },
-  image: {
-    flex: 1,
-    justifyContent: 'center',
-  },
+ 
   logText: {
     fontSize: 16,
     marginBottom: 8,
@@ -171,7 +187,9 @@ const styles = StyleSheet.create({
   },
   timestampText: {
     fontSize: 12,
-    color: '#888888',
+    color: 'white',
+    fontFamily: FontFamily.poppinsRegular,
+    alignSelf: 'flex-end',
   },
   modalContainer: {
     flex: 1,
@@ -187,19 +205,40 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 10,
+    fontFamily: FontFamily.poppinsBold,
   },
   closeButton: {
     marginTop: 20,
-    backgroundColor: '#111827',
+    backgroundColor: '#7B61FF',
     padding: 10,
     borderRadius: 8,
     alignSelf: 'flex-end',
   },
   closeButtonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: FontFamily.poppinsMedium,
+
   },
+  title:{
+  color: 'white',
+  fontFamily: FontFamily.poppinsBold,
+  fontSize: 25,
+  textAlign: 'center',
+  marginTop: 45,
+  },
+  pesoText: {
+    color: 'white',
+    fontFamily: FontFamily.poppinsMedium,
+  },
+  ReceiverEmail:{
+    color: '#d65047',
+    alignSelf: 'flex-end',
+    fontSize: 20,
+  },
+  modTrans:{
+    fontFamily: FontFamily.poppinsMedium,
+    fontSize: 13,
+  }
 });
 

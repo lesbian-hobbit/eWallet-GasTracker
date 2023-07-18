@@ -1,11 +1,14 @@
 import React from "react"
 import { Pressable, StyleSheet } from "react-native"
 import Feather from "react-native-vector-icons/Feather"
+import { Ionicons } from "@expo/vector-icons"
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
 
 const ICON_LIBRARIES = {
+  Ionicons: () => Ionicons,
   Feather: () => Feather,
   MaterialCommunityIcons: () => MaterialCommunityIcons
+  
   // add more libraries as needed
 }
 

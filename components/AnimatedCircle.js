@@ -18,11 +18,11 @@ export default AnimatedCircle
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: -circleContainerSize / 1.1,
+    top: -circleContainerSize / 1.5,
     width: circleContainerSize,
     borderRadius: circleContainerSize,
     height: circleContainerSize,
-    backgroundColor: "#D94934",
+    backgroundColor: "#7B61FF",
     justifyContent: "center",
     alignItems: "center"
   }

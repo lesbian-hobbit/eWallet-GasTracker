@@ -10,6 +10,7 @@ import Feather from "react-native-vector-icons/Feather"
 import { getPathXCenterByIndex } from "../utils/Path"
 import usePath from "../hooks/usePath"
 import { SCREEN_WIDTH } from "../constants/Screen"
+import { Color, FontFamily } from "../GlobalStyles"
 
 const ICON_SIZE = 25
 const LABEL_WIDTH = SCREEN_WIDTH / 4
@@ -21,8 +22,8 @@ const TabItem = ({ label, icon, index, activeIndex, onTabPress }) => {
   const labelPosition = getPathXCenterByIndex(curvedPaths, index)
 
   const tabStyle = useAnimatedStyle(() => {
-    const translateY = animatedActiveIndex.value - 1 === index ? -35 : 20
-    const iconPositionX = iconPosition - index * ICON_SIZE
+  const translateY = animatedActiveIndex.value - 1 === index ? -23 : 20
+  const iconPositionX = iconPosition - index * ICON_SIZE
     return {
       width: ICON_SIZE,
       height: ICON_SIZE,
@@ -90,7 +91,8 @@ const styles = StyleSheet.create({
     width: LABEL_WIDTH
   },
   label: {
-    color: "rgba(128,128,128,0.8)",
-    fontSize: 17
+    color: Color.gray_100,
+    fontSize: 17,
+    fontFamily: FontFamily.poppins
   }
 })

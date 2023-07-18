@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Pressable, SafeAreaView, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Text, Pressable, SafeAreaView, TouchableOpacity, StatusBar } from "react-native";
 import { Image } from "expo-image";
 import React from 'react'
 import { useNavigation } from '@react-navigation/core';
@@ -11,6 +11,7 @@ export default function GetStarted() {
       };
       return (
         <SafeAreaView style={styles.getStarted}>
+          <StatusBar backgroundColor="#141414" />
     <View style={styles.logoContainer}>
       <Image
         style={styles.logo1Icon}

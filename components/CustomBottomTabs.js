@@ -8,7 +8,6 @@ import Animated, {
   withTiming
 } from "react-native-reanimated"
 import { interpolatePath } from "react-native-redash"
-
 import { SCREEN_WIDTH } from "../constants/Screen"
 import usePath from "../hooks/usePath"
 import { getPathXCenter } from "../utils/Path"
@@ -30,9 +29,9 @@ export const CustomBottomTab = ({ state, descriptors, navigation }) => {
       case "Card":
         return "credit-card"
       case "ScanQR":
-        return "slack"
+        return "maximize"
       case "Logs":
-        return "pie-chart"
+        return "clipboard"
       case "Currency":
         return "activity"
       default:

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Image } from 'react-native'
 import React from 'react'
+import { Color } from '../GlobalStyles'
 
 const CoinItem = ({ coin }) => {
   return (
@@ -15,7 +16,7 @@ const CoinItem = ({ coin }) => {
       </View>
       </View>
       <View>
-      <Text style={styles.textPrice}>₱ { coin.current_price } </Text>
+      <Text style={styles.textPrice}> { coin.current_price ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'} </Text>
       <Text style={[styles.pricePercentage, coin.price_change_percentage_24h > 0 ? 
             styles.priceUp : styles.priceDown]}>
       {coin.price_change_percentage_24h}
@@ -29,13 +30,13 @@ export default CoinItem;
 
 const styles = StyleSheet.create({
   containerItem: {
-    backgroundColor: '#121212',
+    backgroundColor: Color.blackModePrimaryDark,
     paddingTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between'
   },
   textSymbol:{
-    color: '#434343',
+    color: Color.gray_400,
     textTransform: 'uppercase',
 
 

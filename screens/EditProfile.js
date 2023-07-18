@@ -1,255 +1,281 @@
-import React, { useState, 
-                useEffect, useContext } from 'react';
-import { View, 
-         Text, 
-         StyleSheet, 
-         TextInput, 
-         ImageBackground,
-         SafeAreaView,
-         TouchableOpacity, Switch } from 'react-native';
-import { auth, 
-         firebase } from '../firebase';
-import { doc, 
-         getDoc,onSnapshot, updateDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput,TouchableOpacity, StatusBar, ToastAndroid } from 'react-native';
+import { auth, firebase } from '../firebase';
+import { doc,onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { onAuthStateChanged } from "firebase/auth";
-import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
-import { AppContext } from '../AppContext';
+import { Color, FontFamily } from '../GlobalStyles';
+import { Image } from 'expo-image';
+import { AntDesign } from '@expo/vector-icons';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 const EditProfile = () => {
-  const { showFingerprint, setShowFingerprint } = useContext(AppContext);
-  const navigation = useNavigation();
-  
-  const [userInfo, setUserInfo] = useState([]);
-  const [email, setEmail] = useState();
-  const [uids, setUid] = useState();
-  const [fullname, setName] = useState();
-  const [contact, setContact] = useState("");
-  const [qrCodeValue, setQrCodeValue] = useState('');
- 
-  const onPress = () => {
-    navigation.navigate("Registrationpage", { showFingerprint: true }); // Replace `true` with the value you want to pass
-  };
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const uid = user.uid;
-        setUid(uid);
-        setEmail(user.email);
-        setQrCodeValue(user.email);
+const navigation = useNavigation();
 
-        const userRef = doc(db, "users", uid);
-        const unsubscribe = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setUserInfo(data);
-          } else {
-            console.log("No such document!");
-          }
-        });
+const [userInfo, setUserInfo] = useState([]);
+const [email, setEmail] = useState();
+const [uids, setUid] = useState();
+const [fullname, setName] = useState(userInfo.fullname);
+const [contact, setContact] = useState("");
+const [qrCodeValue, setQrCodeValue] = useState('');
+const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+const [updatedContact, setUpdatedContact] = useState('');
 
-        return () => unsubscribe();
+useEffect(() => {
+onAuthStateChanged(auth, (user) => {
+if (user) {
+const uid = user.uid;
+setUid(uid);
+setEmail(user.email);
+setQrCodeValue(user.email);
+
+const userRef = doc(db, "users", uid);
+const unsubscribe = onSnapshot(userRef, (docSnap) => {
+if (docSnap.exists()) {
+const data = docSnap.data();
+setUserInfo(data);
+} else {
+console.log("No such document!");
+}
+});
+
+return () => unsubscribe();
+} else {
+navigation.navigate("Login");
+}
+});
+}, []);
+
+const editProfile = async () => {
+  const user = auth.currentUser.uid;
+  if (user) {
+    const uid = user;
+    try {
+      const updatedData = {
+        fullname: fullname === "" ? userInfo.fullname : fullname,
+        contact: contact === "" ? userInfo.contact : contact,
+      };
+
+      if (
+        updatedData.fullname === userInfo.fullname &&
+        updatedData.contact === userInfo.contact
+      ) {
+        ToastAndroid.show('Info is the same', ToastAndroid.SHORT);
       } else {
-        navigation.navigate("Login");
-      }
-    });
-  }, []);
-
-  const editProfile = async () => {
-    const user = auth.currentUser.uid;
-    if (user) {
-      const uid = user;
-      try {
-        const updatedData = {
-          fullname: fullname,
-          contact: contact
-        };
-
         const userRef = firebase.firestore().collection('users').doc(uid);
         await updateDoc(userRef, updatedData);
-        alert('Profile updated successfully');
+
+        setUpdatedContact(updatedData.contact === "" ? userInfo.contact : updatedData.contact);
+        setShowSuccessAlert(true);
         console.log('Profile updated successfully');
-      } catch (error) {
-        alert('Error updating profile:', error);
-        console.error('Error updating profile:', error);
       }
+    } catch (error) {
+      ToastAndroid.show('Error, Please input details', ToastAndroid.LONG);
+      console.error('Error updating profile:', error);
     }
-    
   }
-  const handleToggleFingerprint = () => {
-    setShowFingerprint(!showFingerprint);
-  };
-  return (
-    <SafeAreaView style={{
-      flex: 1,
-      justifyContent: 'center',
-      flexDirection: 'column'
-    }}>
-      <ImageBackground
-        source={require('../assets/background1.jpg')}
-        resizeMode="cover"
-        style={styles.image}
-      >
-        <View style={styles.contentContainer}>
-         
-          <View style={styles.qrCodeContainer}>
-            <View style={styles.qrCode}>
-              {qrCodeValue ? (
-                <QRCode value={qrCodeValue} size={180} />
-              ) : null}
-            </View>
+};
+
+
+
+const backButton = () =>{
+  navigation.navigate("Profile")
+}
+
+return (
+  <KeyboardAwareScrollView
+    contentContainerStyle={styles.scrollContainer}
+    enableOnAndroid
+    extraScrollHeight={Platform.OS === 'ios' ? 20 : 0}
+  >
+      <View style={styles.container}>
+        <StatusBar backgroundColor="#141414" />
+          <TouchableOpacity 
+            style={styles.imgContainer}
+            onPress={backButton}
+            >
+            <Image
+              style={styles.imgIcon}
+              source={require('../assets/back.png')}
+            />
+          </TouchableOpacity>
+
+          <View style={styles.profileContainer}>
+            <Text style={styles.profileText}>Edit Profile</Text>
           </View>
 
-          <Text style={styles.balance}>
-            Current Balance: 
-            <View style={styles.infoContainer}>
-            <Text style={{fontWeight: 'bold', color: 'black'}}>₱{userInfo.wallet}</Text>
-            </View>
+        <View style={styles.contentContainerBox}>
+          <View style={styles.contentContainer}>
+            <Text style={styles.contentText}>Full Name: </Text>
+          </View>
 
-          </Text>
-          <Text style={styles.balance}>
-            Full Name: 
-            <View style={styles.infoContainer}>
-            <Text style={{fontWeight: 'bold', color: 'black'}}>{userInfo.fullname}</Text>
-            </View>
-          </Text>
-          <Text style={styles.balance}>
-            Contact number: 
-            <View style={styles.infoContainer}>
-            <Text style={{fontWeight: 'bold', color: 'black'}}>{userInfo.contact}</Text>
-            </View>
-          </Text>
+          <View style={styles.infoContainer}>
+              <Text style={styles.infoText}>{userInfo.fullname}</Text>
+          </View>
+
+          <View style={styles.contentContainer}>
+            <Text style={styles.contentText}>Contact No. </Text>
+          </View>
+
+          <View style={styles.infoContainer}>
+              <Text style={styles.infoText}>{userInfo.contact}</Text>
+          </View>
+
+        </View>  
+
+
+          <View style={styles.contentContainer}>
+            <AntDesign name='edit' size={30} color={'#fff'}/>
+            <Text style={styles.contentText}>Enter your Full Name: </Text>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.inputText}
+              placeholder={"Juan Dela Cruz"}
+              placeholderTextColor={Color.gray_500}
+              value={fullname}
+              onChangeText={text => setName(text.replace(/[^a-zA-Z ]/g, ''))}     
+            />
+          </View>
 
           
+          <View style={styles.contentContainer}>
+            <AntDesign name='edit' size={30} color={'#fff'}/>
+            <Text style={styles.contentText}>Enter your new Contact Number: </Text>
+          </View>
 
-          <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
             <TextInput
-              style={styles.input}
-              placeholder="Juan DelaCruz"
-              placeholderTextColor="rgba(0, 0, 0, 0.5)"
-              value={fullname}
-              onChangeText={text => setName(text.replace(/[^a-zA-Z ]/g, ''))}
-            />
-   <View style={styles.fingerprintToggleContainer}>
-          <Text style={styles.fingerprintToggleLabel}>Show Fingerprint</Text>
-          <Switch
-            value={showFingerprint}
-            onValueChange={handleToggleFingerprint}
-            
-          />
-            {showFingerprint && (
-              <View style={styles.fingerprintToggleContainer}>
-                <Text style={styles.fingerprintToggleLabel}>Show Fingerprint</Text>
-                <Switch
-                  value={showFingerprint}
-                  onValueChange={handleToggleFingerprint}
-                />
-                {/* Placeholder screen 1 or 2 */}
-              </View>
-            )}
-        </View>
-            <TextInput
-              style={styles.input}
-              placeholder="09xxxxxxxxx"
-              placeholderTextColor="rgba(0, 0, 0, 0.5)"
+              style={styles.inputText}
+              placeholder={"09**-***-****"}
+              placeholderTextColor={Color.gray_500}
               value={contact}
               maxLength={11}
               keyboardType="numeric"
               onChangeText={text => setContact(text.replace(/[^0-9]/g, ''))}
             />
-            <TouchableOpacity
-          style={styles.button}
-          onPress={editProfile}
-          >
-            
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
           </View>
-          
-        </View>
-      </ImageBackground>
-    </SafeAreaView>
-  );
-};
+
+          <TouchableOpacity style={styles.buttonContainer} onPress={editProfile}>
+            <Text style={styles.button}>Save</Text>
+          </TouchableOpacity>
+
+      </View>
+
+      <AwesomeAlert
+        show={showSuccessAlert}
+        title="Profile Updated Successfully!"
+        message={`Full Name: ${fullname}\nContact: ${updatedContact}`}
+        closeOnTouchOutside={false}
+        closeOnHardwareBackPress={false}
+        showCancelButton={false}
+        showConfirmButton={true}
+        confirmText="OK"
+        confirmButtonColor="#7B61FF"
+        confirmButtonStyle={{ backgroundColor: Color.sUNRISECoral }}
+        confirmButtonTextStyle={styles.button}
+        onConfirmPressed={() => {
+          setShowSuccessAlert(false);
+          navigation.navigate("Profile");
+        }}
+        contentContainerStyle={styles.successAlertContent}
+      />
+
+    </KeyboardAwareScrollView>
+
+);};
 
 export default EditProfile;
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container:{
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    backgroundColor: Color.blackModePrimaryDark,
+    padding: 10
   },
-  userInfo: {
-    marginBottom: 20,
+  imgContainer:{
+    justifyContent:'center',
+    alignItems: 'flex-start',
+    padding: 20
   },
-  infoContainer:{
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 5,
-    marginBottom: 10,
-    marginLeft: 5,
+  imgIcon:{
+    height: 50,
+    width: 70
   },
-  qrCode: {
-    alignItems: 'center',
-    margin: 10
-  },
-  qrCodeContainer:{
-    marginBottom: 20,
-    borderWidth: 5,
-    borderColor: '#e5e5e5',
-    borderRadius: 10,
-    justifyContent: 'center',
+  profileContainer:{
+    padding: 10,
     alignItems: 'center'
   },
-  userId: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#333',
-  },
-  idContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-  },
-  image: {
-    flex: 1,
-  },
-  button:{
-    marginHorizontal: 80,
-    backgroundColor: "#111827",
-    paddingVertical: 10,
-    borderRadius: 5,
-    marginTop: 15,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  balance: {
-    fontSize: 18,
-    textAlign: 'center',
-    color: 'white',
-  },
-  formContainer: {
-    marginTop: 20,
-    width: '80%',
-  },
-  input: {
-    height: 40,
-    borderColor: "black",
-    borderWidth: 2,
-    borderRadius: 5,
-    marginBottom: 10,
-    paddingHorizontal: 15,
-    margin: 10,
-    fontFamily: 'Roboto',
-    backgroundColor: 'white'
-  },
+  profileText:{
+    fontFamily: FontFamily.poppinsBold,
+    color: '#fff',
+    fontSize: 30
+},
+contentContainerBox:{
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: "rgba(255, 255, 255, 0.10)",
+  borderRadius: 10,
+  height: '35%',
+  marginBottom: 15
+},
+contentContainer:{
+  padding:10,
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginHorizontal: 10
+},
+contentText:{
+  fontFamily:FontFamily.poppinsRegular,
+  color: Color.gray_700,
+  fontSize: 17,
+  marginLeft: 10
+},
+infoContainer:{
+  backgroundColor: "rgba(255, 255, 255, 0.15)",
+  borderRadius: 40,
+  paddingVertical: 5,
+  paddingHorizontal: 70
+},
+infoText:{
+  fontFamily: FontFamily.poppinsMedium,
+  color: '#fff',
+  fontSize: 18,
+},
+inputContainer:{
+  backgroundColor: "rgba(255, 255, 255, 0.20)",
+  borderRadius: 10,
+  paddingVertical: 5,
+  paddingHorizontal: 70,
+},
+inputText:{
+  fontFamily: FontFamily.poppinsMedium,
+  color: '#fff',
+  fontSize: 18,
+},
+buttonContainer:{
+  justifyContent:'center',
+  alignItems: 'center',
+  padding: 10,
+  backgroundColor: '#7B61FF',
+  borderRadius: 10,
+  marginHorizontal: 100,
+  marginTop: 20
+},
+button:{
+  fontFamily: FontFamily.poppinsBold,
+  color: Color.gray_700,
+  fontSize: 15
+},
+scrollContainer: {
+  flexGrow: 1,
+  backgroundColor: Color.blackModePrimaryDark,
+  marginBottom: 0,
+},
+
 });
